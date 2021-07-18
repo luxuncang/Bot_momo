@@ -106,7 +106,7 @@ ps: 如果注释带有 `key` 请填写key 否则不能直接使用
 * [`mirai`](https://github.com/mamoe/mirai): 即 `mirai-core`, 一个高性能, 高可扩展性的 QQ 协议库
 * [`mirai-console`](https://github.com/mamoe/mirai-console): 一个基于 `mirai` 开发的插件式可扩展开发平台
 * [`mirai-api-http`](https://github.com/project-mirai/mirai-api-http):  `mirai` 交互方式的 `mirai-console` 插件
-* `Graia Application` : 一个设计精巧, 协议实现完备的, 即时聊天软件自动化框架
+* [`Graia Application`](https://github.com/GraiaProject/Application) : 一个设计精巧, 协议实现完备的, 即时聊天软件自动化框架
 
 也感谢所有基于本项目开发的各位开发者, 请积极向上游项目反馈问题.
 
