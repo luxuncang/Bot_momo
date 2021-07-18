@@ -23,7 +23,7 @@ git clone https://github.com/luxuncang/Bot_momo.git
 
 ### 文件配置
 
-![duw](https://github.com/luxuncang/Bot_momo/blob/main/%E7%9B%AE%E5%BD%95%E9%80%BB%E8%BE%91.drawio.png)
+![目录逻辑](目录逻辑.drawio.png)
 
 我们只需要专注 `config.py` 和 `bot_api.py`
 
