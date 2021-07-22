@@ -565,11 +565,11 @@ def run_silently(cmd: str) -> str:
 def hello_world():
     return 'hi'
 
-# 早安
+# 早安 key
 def zaoAn():
     url = "http://api.tianapi.com/txapi/zaoan/index"
     data = {
-        'key':"18eec26bc0beaaad170fce2085b0c419"
+        'key':""
     }
     res = requests.get(url, params=data)
     return res.json()['newslist'][0]['content']
