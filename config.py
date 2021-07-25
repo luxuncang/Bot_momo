@@ -2,7 +2,7 @@
 bot_momo 配置文档
 '''
 from graia.application.message.elements.internal import Plain, Image, At, Face, Source, Voice, Xml
-from bot_api import weather, fanyiyoudao, getIp, getImage, erweiMa, duanZi, liaotian, sshRun, meiImage, oneYan, getBaike, getBlog, get_qqmusic, get_qqmusic_lrc, runCode_c, Language, getDai, Authorize, f_authorize, out_auth, f_out_auth, hello_world, ORCz, shibie, dongmanH, zaoAn
+from bot_api import weather, fanyiyoudao, getIp, getImage, erweiMa, duanZi, liaotian, sshRun, meiImage, oneYan, getBaike, getBlog, get_qqmusic, get_qqmusic_lrc, runCode_c, Language, getDai, Authorize, f_authorize, out_auth, f_out_auth, hello_world, ORCz, shibie, dongmanH, zaoAn, get_help
 import bot_api
 
 ## 机器人配置
@@ -81,7 +81,7 @@ command = {
     '识图': {'method': shibie,'trigger': True, 'mode': Plain, 'isAt': False},
     '头像': {'method': dongmanH,'trigger': True, 'mode': Image, 'isAt': False},
     '/chat': {'method': liaotian,'trigger': False, 'mode': Plain, 'isAt': False},
-    '帮助' : {'method': liaotian,'trigger': False, 'mode': Plain, 'isAt': False}
+    '帮助' : {'method': get_help,'trigger': False, 'mode': Plain, 'isAt': False}
 }
 
 # 中断命令
