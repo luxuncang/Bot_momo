@@ -2,7 +2,7 @@
 bot_momo 配置文档
 '''
 from graia.application.message.elements.internal import Plain, Image, At, Face, Source, Voice, Xml
-from bot_api import weather, fanyiyoudao, getIp, getImage, erweiMa, duanZi, liaotian, sshRun, meiImage, oneYan, getBaike, getBlog, get_qqmusic, get_qqmusic_lrc, runCode_c, Language, getDai, Authorize, f_authorize, out_auth, f_out_auth, hello_world, ORCz, shibie, dongmanH, zaoAn
+from bot_api import weather, fanyiyoudao, getIp, getImage, erweiMa, duanZi, liaotian, get_help, sshRun, meiImage, oneYan, getBaike, getBlog, get_qqmusic, get_qqmusic_lrc, runCode_c, Language, getDai, Authorize, f_authorize, out_auth, f_out_auth, hello_world, ORCz, shibie, dongmanH, zaoAn
 import bot_api
 
 ## 机器人配置
@@ -48,8 +48,8 @@ cycle : int or dict 定时任务周期(秒) 如果为dict则是明天定时任�
 passive = {
     '防撤回': {'status': True, 'callback': 'friend', 'id': 1},
     '定时任务':[
-        {'status': True, 'method': hello_world, 'cycle' : 10,'callback': 'friend', 'id': 1},
-        {'status': True, 'method': zaoAn, 'cycle' : '08:30:00','callback': 'friend', 'id': 1},
+        {'status': False, 'method': hello_world, 'cycle' : 10,'callback': 'friend', 'id': 1},
+        {'status': False, 'method': zaoAn, 'cycle' : '08:30:00','callback': 'friend', 'id': 1},
     ]
 }
 
@@ -67,8 +67,8 @@ command = {
     '天气': {'method': weather, 'trigger': True, 'mode': Plain, 'isAt': True},
     '翻译': {'method': fanyiyoudao,'trigger': True, 'mode': Plain, 'isAt': True},
     '查询IP': {'method': getIp,'trigger': True, 'mode': Plain, 'isAt': True},
-    '图片': {'method': getImage,'trigger': True, 'mode': Image, 'isAt': True},
-    '美图': {'method': meiImage,'trigger': True, 'mode': Image, 'isAt': True},
+    '图片': {'method': getImage,'trigger': True, 'mode': Image, 'isAt': False},
+    '美图': {'method': meiImage,'trigger': True, 'mode': Image, 'isAt': False},
     '二维码': {'method': erweiMa,'trigger': True, 'mode': Image, 'isAt': False},
     '段子': {'method': duanZi,'trigger': True, 'mode': Plain, 'isAt': False},
     '一言': {'method': oneYan,'trigger': True, 'mode': Plain, 'isAt': False},
@@ -81,7 +81,7 @@ command = {
     '识图': {'method': shibie,'trigger': True, 'mode': Plain, 'isAt': False},
     '头像': {'method': dongmanH,'trigger': True, 'mode': Image, 'isAt': False},
     '/chat': {'method': liaotian,'trigger': False, 'mode': Plain, 'isAt': False},
-    '帮助' : {'method': liaotian,'trigger': False, 'mode': Plain, 'isAt': False}
+    '帮助' : {'method': get_help,'trigger': False, 'mode': Plain, 'isAt': True}
 }
 
 # 中断命令

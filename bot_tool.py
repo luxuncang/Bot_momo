@@ -1,4 +1,4 @@
-from graia.application.message.elements.internal import Plain,Image,At,Face,Source,Voice
+from graia.application.message.elements.internal import Plain,Image,At,Face,Source,Voice,Xml
 from config import authority,command,interrupt_command,bot_session,passive
 # 命令过滤
 
@@ -40,6 +40,8 @@ def structure(mode,text):
         res = Image.fromLocalFile(text)
     elif mode==At:
         res = At(text)
+    elif mode==Xml:
+        res = Xml(text)
     else:
         assert False,'Exhibition five this type!'
     return res
@@ -54,6 +56,8 @@ def function_call(method,mode,isAt,mid,*args):
     if mode==Plain:
         res['res'].append(structure(mode,huitiao))
     elif mode==Image:
+        res['res'].append(structure(mode,huitiao))
+    elif mode==Xml:
         res['res'].append(structure(mode,huitiao))
     elif isinstance(mode,list):
         for i,j in enumerate(mode):
@@ -90,13 +94,14 @@ def mfilter(message,member,group,*args):
             qm = getMembers(member.id)
             if qm and (qm=='all' or (cm[0] in authority['authlist'][qm])): # 过滤用户权限
                 if command[cm[0]]['trigger']:
-                    return function_call(command[cm[0]]['method'],command[cm[0]]['mode'],command[cm[0]]['isAt'],member.id,(cm[1],*args),message)
+
+                    return function_call(command[cm[0]]['method'],command[cm[0]]['mode'],command[cm[0]]['isAt'],member.id,cm[1],message)
                 else:
                     if getComandHead(bot_session['account'],message[At]):
-                        return function_call(command[cm[0]]['method'],command[cm[0]]['mode'],command[cm[0]]['isAt'],member.id,(cm[1],*args),message)
-    cm = getComandBody(interrupt_command,message[Plain])
-    if qc and getComandHead(bot_session['account'],message[At]) and cm and (not cm[0] in interrupt_command):
-        return function_call(command['/chat']['method'],command['/chat']['mode'],command['/chat']['isAt'],member.id,message[Plain],message)
+                        return function_call(command[cm[0]]['method'],command[cm[0]]['mode'],command[cm[0]]['isAt'],member.id,cm[1],message)
+    # cm = getComandBody(interrupt_command,message[Plain])
+    # if qc and getComandHead(bot_session['account'],message[At]) and cm and (not cm[0] in interrupt_command):
+    #     return function_call(command['/chat']['method'],command['/chat']['mode'],command['/chat']['isAt'],member.id,message[Plain],message)
     return False
 
 # 中断群会话消息过滤器
@@ -123,8 +128,8 @@ def ffilter(message,member):
         qm = getMembers(member.id)
         if qm and (qm=='all' or (cm[0] in authority['authlist'][qm])): # 过滤用户权限
             return function_call(command[cm[0]]['method'],command[cm[0]]['mode'],False,member.id,cm[1],message)
-    if cm and (not cm[0] in interrupt_command):
-        return function_call(command['/chat']['method'],command['/chat']['mode'],False,member.id,message[Plain],message)
+    # if cm and (not cm[0] in interrupt_command):
+    #     return function_call(command['/chat']['method'],command['/chat']['mode'],False,member.id,message[Plain],message)
     return False
 
 # 中断好友会话消息过滤器
@@ -134,9 +139,7 @@ def ffilter_mfilter(message,member,*args,command = interrupt_command):
         qm = getMembers(member.id)
         if qm and (qm=='all' or (cm[0] in authority['authlist'][qm])): # 过滤用户权限
            return function_call_internal(command[cm[0]]['method'],command[cm[0]]['mode'],False,member.id,(*cm,*args),message)
-    if cm:
-        return function_call(command['/chat']['method'],command['/chat']['mode'],False,member.id,message[Plain],message)
-    return False
+    return function_call(command['/chat']['method'],command['/chat']['mode'],False,member.id,message[Plain],message)
 
 
 # clear cache
@@ -220,8 +223,19 @@ def sendFriendMessage(target,text):
     res = requests.post(url=url, headers=headers,json=data)
     return res.json() 
 
+# 监听信息
+def peekLatestMessage():
+    # conRun()
+    # print(sessionKey)
+    url = host + 'peekLatestMessage'
+    print(url)
+    data = {
+        "sessionKey": 'jWiBBYqG',
+        "count": 10,
+    }
+    res = requests.get(url=url,params=data)
 
-## 定时任务
+    return res.json()
 
 # Timing task
 import datetime
@@ -260,7 +274,6 @@ class TimingTask:
 
     def task(self):
         self.send(self.id,self.method())
-        # print('TimeNow:%s' % (datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
         if isinstance(self.wait,int):
             self.cycle = self.cycle
         elif isinstance(self.wait,str):

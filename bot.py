@@ -41,7 +41,7 @@ async def friend_message_listener(app: GraiaMiraiApplication, friend: Friend, me
         # await  app.revokeMessage(im)
     else:
         res = ffilter_mfilter(message,friend)
-        if res:
+        if not 'res' in res:
             m1 = res['args'][0]
             task1 = res['args'][2]
             await app.sendFriendMessage(friend, MessageChain.create(res['res']))
@@ -60,7 +60,8 @@ async def friend_message_listener(app: GraiaMiraiApplication, friend: Friend, me
                     return event
             await inc.wait(waiters)
             await app.sendFriendMessage(friend, MessageChain.create(INTERRUPT[task1][friend.id]))
-    
+        else:
+            await app.sendFriendMessage(friend, MessageChain.create(res['res']))
 
 # 侦测群对话
 @bcc.receiver("GroupMessage")
@@ -70,59 +71,65 @@ async def group_message_handler(
     group: Group, member: Member, 
     source: Source
 ):  
-    # print(message[Image][0].url)
     global WITHDRAWAL
     WITHDRAWAL['group'][source.id] = message
     WITHDRAWAL['group'] = dict_slice(WITHDRAWAL['group'],-50)
     # print(WITHDRAWAL)
+    # await app.sendGroupMessage(group, MessageChain.create([Poke.Poke]))
     res = mfilter(message,member,group)
     if res:
         await app.sendGroupMessage(group, MessageChain.create(res['res']))
     else:
         res = internal_mfilter(message,member,group)
         if res:
-            m1 = res['args'][0]
-            task1 = res['args'][2]
-            await app.sendGroupMessage(group, MessageChain.create(res['res']))
-            @Waiter.create_using_function([GroupMessage])
-            def waiter(
-                event: GroupMessage, waiter_group: Group,
-                waiter_member: Member, waiter_message: MessageChain
-            ):  
-
-                res = internal_mfilter(waiter_message,waiter_member,waiter_group,m1,interrupt_command = interrupt_command[task1]['command'])
-                if res:
-                    INTERRUPT[task1][member.id] = res['res']
-                if all([
-                    waiter_group.id == group.id,
-                    waiter_member.id == member.id,
-                    res
-                ]):
-                    return event
-            await inc.wait(waiter)
-            await app.sendGroupMessage(group, MessageChain.create(INTERRUPT[task1][member.id]))
+            if res and not 'res' in res:
+                m1 = res['args'][0]
+                task1 = res['args'][2]
+                await app.sendGroupMessage(group, MessageChain.create(res['res']))
+                @Waiter.create_using_function([GroupMessage])
+                def waiter(
+                    event: GroupMessage, waiter_group: Group,
+                    waiter_member: Member, waiter_message: MessageChain
+                ):  
+                    res = internal_mfilter(waiter_message,waiter_member,waiter_group,m1,interrupt_command = interrupt_command[task1]['command'])
+                    if res:
+                        INTERRUPT[task1][member.id] = res['res']
+                    if all([
+                        waiter_group.id == group.id,
+                        waiter_member.id == member.id,
+                        res
+                    ]):
+                        return event
+                await inc.wait(waiter)
+                await app.sendGroupMessage(group, MessageChain.create(INTERRUPT[task1][member.id]))
+            else:
+                await app.sendGroupMessage(group, MessageChain.create(res['res']))
 
 # 监听群撤回事件
 @bcc.receiver("GroupRecallEvent")
 async def function_GroupRecallEvent(event:GroupRecallEvent):
-    if passive['防撤回']['status']:
-        if passive['防撤回']['callback'] == 'friend':
-            # await app.sendGroupMessage(passive['防撤回']['id'],)
-            await app.sendFriendMessage(passive['防撤回']['id'], MessageChain.join(MessageChain.create([Plain('撤回消息\n----------\n')]),MessageChain.asSendable(WITHDRAWAL['group'][event.messageId])))
-        elif passive['防撤回']['callback'] == 'group':
-            await app.sendGroupMessage(passive['防撤回']['id'], MessageChain.asSendable(WITHDRAWAL['group'][event.messageId]))
-
+    try:
+        if passive['防撤回']['status']:
+            if passive['防撤回']['callback'] == 'friend':
+                await app.sendFriendMessage(passive['防撤回']['id'], MessageChain.join(MessageChain.create([Plain(f'{event.authorId} 在 {event.group.name}\n撤回消息\n----------\n')]),MessageChain.asSendable(WITHDRAWAL['group'][event.messageId])))
+            elif passive['防撤回']['callback'] == 'group':
+                await app.sendGroupMessage(passive['防撤回']['id'], MessageChain.join(MessageChain.create([Plain(f'{event.authorId} 在 {event.group.name}\n撤回消息\n----------\n')]),MessageChain.asSendable(WITHDRAWAL['group'][event.messageId])))
+    except KeyError:
+        print('缓存无此消息！')
+    
 # 监听好友撤回事件
 @bcc.receiver("FriendRecallEvent")
 async def function_GroupRecallEvent(event:FriendRecallEvent):
-    if passive['防撤回']['status']:
-        if passive['防撤回']['callback'] == 'friend':
-            await app.sendFriendMessage(passive['防撤回']['id'], MessageChain.asSendable(WITHDRAWAL['friend'][event.messageId]))
-        elif passive['防撤回']['callback'] == 'group':
-            await app.sendGroupMessage(passive['防撤回']['id'], MessageChain.asSendable(WITHDRAWAL['friend'][event.messageId]))
-
+    try:
+        if passive['防撤回']['status']:
+            if passive['防撤回']['callback'] == 'friend':
+                await app.sendFriendMessage(passive['防撤回']['id'], MessageChain.join(MessageChain.create([Plain(f'{event.authorId} 在 {event.group.name}\n撤回消息\n----------\n')]),MessageChain.asSendable(WITHDRAWAL['group'][event.messageId])))
+            elif passive['防撤回']['callback'] == 'group':
+                await app.sendGroupMessage(passive['防撤回']['id'], MessageChain.asSendable(WITHDRAWAL['friend'][event.messageId]))
+    except KeyError:
+        print('缓存无此消息！')
 # 定时任务
-TimerTasks(Tasks)
+# TimerTasks(Tasks)
 
 app.launch_blocking()
 

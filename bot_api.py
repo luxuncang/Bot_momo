@@ -47,7 +47,7 @@ authority = {}
 # 消息链解析
 def Resolutionmessage(types = None):
     '''
-    当 `types` 为消息类型时,将为函数多赋一个 `types` 类型的消息值
+    当 `types` 为消息类型时
     '''
     def wrapper(fun):
         def main(*args,**kwargs):
@@ -569,7 +569,7 @@ def hello_world():
 def zaoAn():
     url = "http://api.tianapi.com/txapi/zaoan/index"
     data = {
-        'key':"18eec26bc0beaaad170fce2085b0c419"
+        'key':""
     }
     res = requests.get(url, params=data)
     return res.json()['newslist'][0]['content']
