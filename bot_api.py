@@ -52,9 +52,9 @@ def Resolutionmessage(types = None):
     def wrapper(fun):
         def main(*args,**kwargs):
             if not types:
-                return fun(args[0])
+                return fun(args[0][0])
             else:
-                return fun(args[0],args[1][types])
+                return fun(args[0][0],args[1][types])
         return main
     return wrapper
 
