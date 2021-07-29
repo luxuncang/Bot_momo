@@ -1,6 +1,9 @@
-from graia.application.message.elements.internal import Plain,Image,At,Face,Source,Voice,Xml
+from graia.application.message.elements.internal import Plain,PokeMethods,Image,At,Face,Source,Voice,Xml,AtAll,FlashImage,Json,App,Poke,Quote
 from config import authority,command,interrupt_command,bot_session,passive
+
+
 # 命令过滤
+MessageType = (Plain,At,AtAll,Image,Face,Source,Voice,FlashImage,Json,App,Poke,Xml)
 
 # 查询指令头
 def getComandHead(act,men):
@@ -40,10 +43,24 @@ def structure(mode,text):
         res = Image.fromLocalFile(text)
     elif mode==At:
         res = At(text)
+    elif mode==AtAll:
+        res = AtAll()
     elif mode==Xml:
         res = Xml(text)
+    elif mode==App:
+        res = App(content = text)
+    elif mode==Json:
+        res = Json(text)
+    elif mode==Face:
+        res = Face(faceId = text)
+    elif mode==Voice:
+        res = Voice.fromLocalFile(text)
+    # elif mode==Poke:
+    #     res = Poke(name = text)
+    elif mode==FlashImage:
+        res = Image.fromLocalFile(text).asFlash()
     else:
-        assert False,'Exhibition five this type!'
+       raise TypeError(f'{str(mode)} does not exist!')
     return res
 
 # 功能调用
@@ -53,17 +70,13 @@ def function_call(method,mode,isAt,mid,*args):
     if isAt:
         res['res'].append(At(mid))
         res['res'].append(Plain('\n'))
-    if mode==Plain:
-        res['res'].append(structure(mode,huitiao))
-    elif mode==Image:
-        res['res'].append(structure(mode,huitiao))
-    elif mode==Xml:
+    if mode in MessageType:
         res['res'].append(structure(mode,huitiao))
     elif isinstance(mode,list):
         for i,j in enumerate(mode):
                 res['res'].append(structure(j,huitiao[i]))
     else:
-        assert False,'Exhibition five this type!'
+        raise TypeError(f'{str(mode)} does not exist!')
     return res
 
 # 功能调用
@@ -203,6 +216,7 @@ def sendGroupMessage(group,text):
         "target": group,
         "messageChain": [
         { "type": "Plain", "text": text },
+        # {"type": "Face","faceId": text}
     ]
     }
     res = requests.post(url=url, headers=headers,json=data)
