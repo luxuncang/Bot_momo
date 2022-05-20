@@ -51,10 +51,7 @@ def Resolutionmessage(types = None):
     '''
     def wrapper(fun):
         def main(*args,**kwargs):
-            if not types:
-                return fun(args[0])
-            else:
-                return fun(args[0],args[1][types])
+            return fun(args[0],args[1][types]) if types else fun(args[0])
         return main
     return wrapper
 
@@ -74,7 +71,7 @@ def weather(city):
         res = result['result']
         result = '城市' + ':' + res['city'] + '\n'
         for i,j in res['realtime'].items():
-            result+=i + ':' + j + '\n'
+            result += f'{i}:{j}' + '\n'
     else:
         result = result['reason']
 
@@ -107,7 +104,7 @@ def getIp(ips):
         res = result['result']
         result = ''
         for i,j in res.items():
-            result+=i + ':' + j + '\n'
+            result += f'{i}:{j}' + '\n'
     else:
         result = result['reason']
     return result
@@ -178,9 +175,7 @@ def liaotian(text):
     }
     res = requests.get(url,params=data).json()
     res = res['content'].replace("{br}",'\n').replace('★','').split('\n')
-    ress = ''
-    for i in res:
-        ress +=i.strip()+'\n'
+    ress = ''.join(i.strip()+'\n' for i in res)
     return ress.rstrip('\n').replace('菲菲','墨墨')
 
 # 一言
@@ -242,7 +237,7 @@ def getBlog(text):
 # 帮助
 @Resolutionmessage()
 def get_help(text):
-    res = '''墨墨机器人😄
+    return '''墨墨机器人😄
     支持命令：
     翻译 >> 翻译 hello
     查询IP >> 查询IP 172.0.0.1
@@ -259,7 +254,6 @@ def get_help(text):
     歌词 >> 歌词青花瓷
     runCode >> runCode(附带代码)
     '''
-    return res
 
 # 百度api key
 APIKEY = ''
@@ -269,8 +263,7 @@ def GetAccessToeken():
     header = {'Content-Type': 'application/json; charset=UTF-8'}
     response = requests.post(url=token_host, headers=header)
     content = response.json()
-    access_token = content.get("access_token")
-    return access_token
+    return content.get("access_token")
 
 
 '''
@@ -294,13 +287,14 @@ def ORCz(tuurl,message):
             img = base64.b64encode(f.read())
         params = {"image":img}
 
-        
+
         access_token = GetAccessToeken()
-        request_url = request_url + "?access_token=" + access_token
+        request_url = f"{request_url}?access_token={access_token}"
         headers = {'content-type': 'application/x-www-form-urlencoded'}
-        response = requests.post(request_url, data=params, headers=headers)
-        if response:
-            res = response.json()['words_result']      
+        if response := requests.post(
+            request_url, data=params, headers=headers
+        ):
+            res = response.json()['words_result']
             for i in res:
                 text += i['words']+'\n\n'
     return text
@@ -324,7 +318,7 @@ def shibie(tuurl,message):
 
     params = {"image":img}
     access_token = GetAccessToeken()
-    request_url = request_url + "?access_token=" + access_token
+    request_url = f"{request_url}?access_token={access_token}"
     headers = {'content-type': 'application/x-www-form-urlencoded'}
     response = requests.post(request_url, data=params, headers=headers)
     text = ''
@@ -357,10 +351,9 @@ def dongmanH(tuurl,message):
         img = base64.b64encode(f.read())
     params = {"image":img}
     access_token = GetAccessToeken()
-    request_url = request_url + "?access_token=" + access_token
+    request_url = f"{request_url}?access_token={access_token}"
     headers = {'content-type': 'application/x-www-form-urlencoded'}
-    response = requests.post(request_url, data=params, headers=headers)
-    if response:
+    if response := requests.post(request_url, data=params, headers=headers):
         with open(path,'wb') as f:
             f.write(base64.b64decode(response.json()['image']))
     return path
@@ -520,7 +513,7 @@ def f_authorize(args):
     if qqid in authority['member'][args[0]]:
         return ('',"有授权！")
     authority['member'][args[0]].append(qqid)
-    with open(os.path.join(onfile,'授权',args[0]+'.txt'),'a',encoding='utf-8') as f:
+    with open(os.path.join(onfile, '授权', f'{args[0]}.txt'), 'a', encoding='utf-8') as f:
         f.write(str(qqid) + '\n')
     return ('',"已授权！")
 
@@ -532,21 +525,20 @@ def out_auth(text):
 @Resolutionmessage()
 def f_out_auth(args):
     qqid = int(args[2].strip('\n').strip())
-    if qqid in authority['member'][args[0]]:
-        authority['member'][args[0]].remove(qqid)
-        with open(os.path.join(onfile,'授权',args[0]+'.txt'),'w',encoding='utf-8') as f:
-            for i in authority['member'][args[0]]:
-                f.write(str(i) + '\n')
-        return ('',f'{qqid} 已OUT！')
-    else:
+    if qqid not in authority['member'][args[0]]:
         return ('',f'{qqid} 无此类别授权！')
+    authority['member'][args[0]].remove(qqid)
+    with open(os.path.join(onfile, '授权', f'{args[0]}.txt'), 'w', encoding='utf-8') as f:
+        for i in authority['member'][args[0]]:
+            f.write(str(i) + '\n')
+    return ('',f'{qqid} 已OUT！')
 
 ## 初始化api
 def init_authority(auth):
     for i in auth['member']:
         try:
-            with open(os.path.join(onfile,'授权',i+'.txt'),'r',encoding='utf-8') as f:
-                auth['member'][i] += [int(i) for i in f if not i=='\n']
+            with open(os.path.join(onfile, '授权', f'{i}.txt'), 'r', encoding='utf-8') as f:
+                auth['member'][i] += [int(i) for i in f if i != '\n']
             auth['member'][i] = list(set(auth['member'][i]))
         except FileNotFoundError:
             pass
