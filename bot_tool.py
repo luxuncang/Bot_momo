@@ -20,19 +20,13 @@ def getComandBody(com,men):
 
 # 查询授权的群范围
 def getGroups(gid):
-    for i,j in authority['group'].items():
-        if gid in j:
-            return i
-    return False
+    return next((i for i,j in authority['group'].items() if gid in j), False)
 
 # 查看授权的人    
 def getMembers(mid):
     if mid in authority['shield']:
         return False
-    for i,j in authority['member'].items():
-        if mid in j:
-            return i
-    return False
+    return next((i for i,j in authority['member'].items() if mid in j), False)
 
 # 构造消息链
 def structure(mode,text):
@@ -86,11 +80,9 @@ def function_call_internal(method,mode,isAt,mid,*args):
     if isAt:
         res['res'].append(At(mid))
         res['res'].append(Plain('\n'))
-    if mode==Plain:
+    if mode in [Plain, Image]:
         res['res'].append(structure(mode,huitiao[1]))
-    elif mode==Image:
-        res['res'].append(structure(mode,huitiao[1]))
-    elif isinstance(mode,list):
+    elif isinstance(mode, list):
         for i in enumerate(mode):
                 res['res'].append(structure(mode[i],huitiao[1][i]))
     else:
@@ -100,18 +92,15 @@ def function_call_internal(method,mode,isAt,mid,*args):
 
 # 群会话消息过滤器
 def mfilter(message,member,group,*args):
-    qc = getGroups(group.id)
-    if qc: # 过滤群
+    if qc := getGroups(group.id):
         cm = getComandBody(command,message[Plain])
         if cm and cm[0] in command: # 过滤命令
             qm = getMembers(member.id)
             if qm and (qm=='all' or (cm[0] in authority['authlist'][qm])): # 过滤用户权限
                 if command[cm[0]]['trigger']:
-
                     return function_call(command[cm[0]]['method'],command[cm[0]]['mode'],command[cm[0]]['isAt'],member.id,cm[1],message)
-                else:
-                    if getComandHead(bot_session['account'],message[At]):
-                        return function_call(command[cm[0]]['method'],command[cm[0]]['mode'],command[cm[0]]['isAt'],member.id,cm[1],message)
+                if getComandHead(bot_session['account'],message[At]):
+                    return function_call(command[cm[0]]['method'],command[cm[0]]['mode'],command[cm[0]]['isAt'],member.id,cm[1],message)
     # cm = getComandBody(interrupt_command,message[Plain])
     # if qc and getComandHead(bot_session['account'],message[At]) and cm and (not cm[0] in interrupt_command):
     #     return function_call(command['/chat']['method'],command['/chat']['mode'],command['/chat']['isAt'],member.id,message[Plain],message)
@@ -119,17 +108,15 @@ def mfilter(message,member,group,*args):
 
 # 中断群会话消息过滤器
 def internal_mfilter(message,member,group,*args,interrupt_command=interrupt_command):
-    qc = getGroups(group.id)
-    if qc: # 过滤群
+    if qc := getGroups(group.id):
         cm = getComandBody(interrupt_command,message[Plain])
         if cm and cm[0] in interrupt_command: # 过滤命令
             qm = getMembers(member.id)
             if qm and (qm=='all' or (cm[0] in authority['authlist'][qm])): # 过滤用户权限
                 if interrupt_command[cm[0]]['trigger']:
                     return function_call_internal(interrupt_command[cm[0]]['method'],interrupt_command[cm[0]]['mode'],interrupt_command[cm[0]]['isAt'],member.id,(*cm,*args),message)
-                else:
-                    if getComandHead(bot_session['account'],message[At]):
-                        return function_call_internal(interrupt_command[cm[0]]['method'],interrupt_command[cm[0]]['mode'],interrupt_command[cm[0]]['isAt'],member.id,(*cm,*args),message)
+                if getComandHead(bot_session['account'],message[At]):
+                    return function_call_internal(interrupt_command[cm[0]]['method'],interrupt_command[cm[0]]['mode'],interrupt_command[cm[0]]['isAt'],member.id,(*cm,*args),message)
     if getComandHead(bot_session['account'],message[At]):
         return function_call(command['/chat']['method'],command['/chat']['mode'],command['/chat']['isAt'],member.id,message[Plain],message)
     return False
@@ -165,10 +152,7 @@ def clear_cache(cache,mid,message):
 # 字典切片
 def dict_slice(adict, start, end=None):
     keys = adict.keys()
-    dict_slice = {}
-    for k in list(keys)[start:end]:
-        dict_slice[k] = adict[k]
-    return dict_slice
+    return {k: adict[k] for k in list(keys)[start:end]}
 
 
 ## 自定义api工具
@@ -181,7 +165,7 @@ sessionKey = ''
 # 获取sessionKey
 def getSession():
     global sessionKey
-    url = host + 'auth'
+    url = f'{host}auth'
     headers = {'Content-Type': 'application/json'}
     data = {
         "authKey": bot_session["authKey"]
@@ -192,7 +176,7 @@ def getSession():
 
 # 激活会话
 def verify():
-    url = host + 'verify'
+    url = f'{host}verify'
     headers = {'Content-Type': 'application/json'}
     data = {
         "sessionKey": sessionKey,
@@ -209,7 +193,7 @@ def conRun():
 # 群消息
 def sendGroupMessage(group,text):
     conRun()
-    url = host + 'sendGroupMessage'
+    url = f'{host}sendGroupMessage'
     headers = {'Content-Type': 'application/json'}
     data = {
         "sessionKey": sessionKey,
@@ -225,7 +209,7 @@ def sendGroupMessage(group,text):
 # 好友消息
 def sendFriendMessage(target,text):
     conRun()
-    url = host + 'sendFriendMessage'
+    url = f'{host}sendFriendMessage'
     headers = {'Content-Type': 'application/json'}
     data = {
         "sessionKey": sessionKey,
@@ -241,7 +225,7 @@ def sendFriendMessage(target,text):
 def peekLatestMessage():
     # conRun()
     # print(sessionKey)
-    url = host + 'peekLatestMessage'
+    url = f'{host}peekLatestMessage'
     print(url)
     data = {
         "sessionKey": 'jWiBBYqG',
@@ -264,7 +248,12 @@ def next_cycle(tast_time):
     next_month = next_time.date().month
     next_day = next_time.date().day
     # 获取明天任务点时间
-    next_time = datetime.datetime.strptime(str(next_year)+"-"+str(next_month)+"-"+str(next_day) + f" {tast_time}", "%Y-%m-%d %H:%M:%S")
+    next_time = datetime.datetime.strptime(
+        f"{str(next_year)}-{str(next_month)}-{str(next_day)}"
+        + f" {tast_time}",
+        "%Y-%m-%d %H:%M:%S",
+    )
+
     # # 获取昨天时间
 
     # 获取距离明天任务点时间，单位为秒
